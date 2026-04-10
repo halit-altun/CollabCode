@@ -1,0 +1,12 @@
+version: "3"
+
+services:
+  collabcode-panel:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: "<your_docker_username>/collabcode-panel"
+    ports:
+      - "5000:5000"
+      - "3000:3000"
+      - "8000:8000"
