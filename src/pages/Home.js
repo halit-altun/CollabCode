@@ -39,12 +39,16 @@ const Home = () => {
     return (
         <div className="homePageWrapper">
             <div className="formWrapper">
-                <img
-                    className="homePageLogo"
-                    src="/logo.png"
-                    alt="CollabCode Panel"
-                />
-                <h4 className="mainLabel">Generate new room or paste invitation ROOM ID</h4>
+                <div className="homeFormHeader">
+                    <img
+                        className="homePageLogo"
+                        src="/logo.png"
+                        alt="CollabCode Panel"
+                    />
+                    <h4 className="mainLabel">
+                        Generate a new room or paste your invitation ROOM ID
+                    </h4>
+                </div>
                 <div className="inputGroup">
                     <input
                         type="text"
@@ -53,6 +57,8 @@ const Home = () => {
                         onChange={(e) => setRoomId(e.target.value)}
                         value={roomId}
                         onKeyUp={handleInputEnter}
+                        autoComplete="off"
+                        spellCheck={false}
                     />
                     <input
                         type="text"
@@ -61,23 +67,25 @@ const Home = () => {
                         onChange={(e) => setUsername(e.target.value)}
                         value={username}
                         onKeyUp={handleInputEnter}
+                        autoComplete="username"
+                        spellCheck={false}
                     />
-                    <button className="btn joinBtn" onClick={joinRoom}>
-                        Join
+                    <button type="button" className="btn joinBtn" onClick={joinRoom}>
+                        Join room
                     </button>
                     <span className="createInfo">
-                        If you don't have an invite then create &nbsp;
-                        <a
-                            onClick={createNewRoom}
-                            href="#create-room"
+                        No invite?{' '}
+                        <button
+                            type="button"
                             className="createNewBtn"
+                            onClick={createNewRoom}
                         >
-                            new room
-                        </a>
+                            Create new room
+                        </button>
                     </span>
                 </div>
             </div>
-            <footer>
+            <footer className="homeFooter">
                 <h4>Built by Halit Altun</h4>
             </footer>
         </div>

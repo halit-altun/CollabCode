@@ -13,13 +13,27 @@ function App() {
                 <Toaster
                     position="top-center"
                     toastOptions={{
+                        duration: 3200,
+                        style: {
+                            background: '#282a36',
+                            color: '#eef0f5',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            boxShadow: '0 12px 32px rgba(0,0,0,0.35)',
+                        },
                         success: {
-                            theme: {
+                            iconTheme: {
                                 primary: '#4aed88',
+                                secondary: '#1c1e29',
+                            },
+                        },
+                        error: {
+                            iconTheme: {
+                                primary: '#ef4444',
+                                secondary: '#1c1e29',
                             },
                         },
                     }}
-                ></Toaster>
+                />
             </div>
             <BrowserRouter>
                 <RecoilRoot>

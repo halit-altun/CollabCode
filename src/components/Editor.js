@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useImperativeHandle } from "react";
-import { language, cmtheme } from "../../src/atoms";
+import { language, cmtheme } from "../atoms";
 import { useRecoilValue } from "recoil";
 import ACTIONS from "../actions/Actions";
 
@@ -107,46 +107,60 @@ import "codemirror/addon/search/jump-to-line.js";
 import "codemirror/addon/dialog/dialog.js";
 import "codemirror/addon/dialog/dialog.css";
 
-const Editor = React.forwardRef(({ socketRef, roomId, onCodeChange }, ref) => {
+const Editor = React.forwardRef(({ socketRef, roomId, onCodeChange, socketEpoch }, ref) => {
   const editorRef = useRef(null);
   const lang = useRecoilValue(language);
   const editorTheme = useRecoilValue(cmtheme);
+  const onCodeChangeRef = useRef(onCodeChange);
+  const roomIdRef = useRef(roomId);
+
+  useEffect(() => {
+    onCodeChangeRef.current = onCodeChange;
+  }, [onCodeChange]);
+
+  useEffect(() => {
+    roomIdRef.current = roomId;
+  }, [roomId]);
 
   useImperativeHandle(ref, () => ({
     setCode: (code) => {
-      editorRef.current.setValue(code);
+      editorRef.current?.setValue(code);
     },
   }));
 
-
   useEffect(() => {
-    async function init() {
-      editorRef.current = Codemirror.fromTextArea(
-        document.getElementById("collabCodeEditor"),
-        {
-          mode: { name: lang },
-          theme: editorTheme,
-          autoCloseTags: true,
-          autoCloseBrackets: true,
-          lineNumbers: true,
-        }
-      );
+    const textarea = document.getElementById("collabCodeEditor");
+    if (!textarea) return undefined;
 
-      editorRef.current.on("change", (instance, changes) => {
-        const { origin } = changes;
-        const code = instance.getValue();
-        console.log("main:editor: ", code);
-        onCodeChange(code);
-        if (origin !== "setValue") {
-          socketRef.current.emit(ACTIONS.CODE_CHANGE, {
-            roomId,
-            code,
-          });
-        }
-      });
-    }
-    init();
-  }, [lang]);
+    const cm = Codemirror.fromTextArea(textarea, {
+      mode: { name: lang },
+      theme: editorTheme,
+      autoCloseTags: true,
+      autoCloseBrackets: true,
+      lineNumbers: true,
+    });
+    editorRef.current = cm;
+
+    const onLocalChange = (instance, changes) => {
+      const { origin } = changes;
+      const code = instance.getValue();
+      onCodeChangeRef.current(code);
+      if (origin !== "setValue" && socketRef.current) {
+        socketRef.current.emit(ACTIONS.CODE_CHANGE, {
+          roomId: roomIdRef.current,
+          code,
+        });
+      }
+    };
+
+    cm.on("change", onLocalChange);
+
+    return () => {
+      cm.off("change", onLocalChange);
+      cm.toTextArea();
+      editorRef.current = null;
+    };
+  }, [lang, socketRef]);
 
   useEffect(() => {
     if (editorRef.current) {
@@ -155,20 +169,27 @@ const Editor = React.forwardRef(({ socketRef, roomId, onCodeChange }, ref) => {
   }, [editorTheme]);
 
   useEffect(() => {
-    if (socketRef.current) {
-      socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
-        if (code !== null) {
-          editorRef.current.setValue(code);
-        }
-      });
-    }
+    if (!socketEpoch) return undefined;
+    const socket = socketRef.current;
+    if (!socket) return undefined;
 
-    return () => {
-      socketRef.current.off(ACTIONS.CODE_CHANGE);
+    const onRemoteCode = ({ code }) => {
+      if (code == null || !editorRef.current) return;
+      const local = editorRef.current.getValue();
+      if (code !== local) {
+        editorRef.current.setValue(code);
+      }
     };
-  }, [socketRef.current]);
 
-  return <textarea id="collabCodeEditor"></textarea>;
+    socket.on(ACTIONS.CODE_CHANGE, onRemoteCode);
+    return () => {
+      socket.off(ACTIONS.CODE_CHANGE, onRemoteCode);
+    };
+  }, [socketEpoch, socketRef]);
+
+  return <textarea id="collabCodeEditor" defaultValue="" spellCheck="false" />;
 });
+
+Editor.displayName = "Editor";
 
 export default Editor;

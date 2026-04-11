@@ -1,10 +1,29 @@
+html,
+body,
+#root {
+    height: 100%;
+}
+
 * {
     font-variant-ligatures: none;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
 }
 
 body {
     margin: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background: #1c1e29;
+    text-rendering: optimizeLegibility;
+    background: var(--bg-app, #1c1e29);
+    color: #e8eaef;
+}
+
+::selection {
+    background: rgba(0, 150, 255, 0.35);
+    color: #fff;
 }
